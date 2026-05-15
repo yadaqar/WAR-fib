@@ -580,6 +580,7 @@
             <button class="nav-tab" onclick="switchTab('admin')">⚙️ الإدارة</button>
             <button class="nav-tab" onclick="switchTab('reports')">📈 التقارير</button>
             <button class="nav-tab" onclick="switchTab('settings')">🔧 الإعدادات</button>
+            <button class="nav-tab" onclick="switchTab('externalData')">🔗 داتای دەرەکی</button>
         </div>
 
         <div id="operations" class="tab-content active">
@@ -977,6 +978,60 @@
                     <button class="btn btn-success" onclick="exportToExcel()">
                         📊 تصدير Excel
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="externalData" class="tab-content">
+            <div class="form-section">
+                <h2>🔗 ناردنی داتای دەرەکی بۆ گووگڵ شیتس</h2>
+                <div class="alert alert-info">
+                    <strong>تێبینی:</strong> ئەم بەشە بۆ ناردنی داتا بۆ گووگڵ شیتس بەکاردێت. دڵنیابە لەوەی لینکی ئەپس سکریپتەکەت بە دروستی داناوە.
+                </div>
+                <form id="externalDataForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="userName">ناوەکەت *</label>
+                            <input type="text" id="userName" placeholder="ناوەکەت" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userData">داتاکە *</label>
+                            <textarea id="userData" placeholder="داتاکە" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        🚀 ناردن بۆ داتابەیس
+                    </button>
+                </form>
+                <div class="alert alert-warning" style="margin-top: 20px;">
+                    <strong>تێبینی گرنگ:</strong> بەهۆی بەکارهێنانی `mode: 'no-cors'`، ئەم پەیامەی سەرکەوتن "داتاکە پاشەکەوت کرا!" تەنها ئاماژەیە بۆ ئەوەی داواکارییەکە نێردراوە، نەک بە دڵنیاییەوە گەیشتووەتە گووگڵ شیتس. بۆ دڵنیابوون، پێویستە گووگڵ شیتسەکە بپشکنیت.
+                </div>
+            </div>
+        </div>
+
+        <div id="externalData" class="tab-content">
+            <div class="form-section">
+                <h2>🔗 ناردنی داتای دەرەکی بۆ گووگڵ شیتس</h2>
+                <div class="alert alert-info">
+                    <strong>تێبینی:</strong> ئەم بەشە بۆ ناردنی داتا بۆ گووگڵ شیتس بەکاردێت. دڵنیابە لەوەی لینکی ئەپس سکریپتەکەت بە دروستی داناوە.
+                </div>
+                <form id="externalDataForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="userName">ناوەکەت *</label>
+                            <input type="text" id="userName" placeholder="ناوەکەت" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userData">داتاکە *</label>
+                            <textarea id="userData" placeholder="داتاکە" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        🚀 ناردن بۆ داتابەیس
+                    </button>
+                </form>
+                <div class="alert alert-warning" style="margin-top: 20px;">
+                    <strong>تێبینی گرنگ:</strong> بەهۆی بەکارهێنانی `mode: 'no-cors'`، ئەم پەیامەی سەرکەوتن "داتاکە پاشەکەوت کرا!" تەنها ئاماژەیە بۆ ئەوەی داواکارییەکە نێردراوە، نەک بە دڵنیاییەوە گەیشتووەتە گووگڵ شیتس. بۆ دڵنیابوون، پێویستە گووگڵ شیتسەکە بپشکنیت.
                 </div>
             </div>
         </div>
@@ -2093,6 +2148,50 @@
         window.addEventListener('beforeunload', () => {
             saveData();
         });
+    </script>
+
+    <script>
+        // کۆدی ناردنی داتا بۆ گووگڵ شیتس
+        document.getElementById('externalDataForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            sendData();
+        });
+
+        function sendData() {
+            // لێرەدا ئەو لینکەی لە ئەپس سکریپت کۆپیت کرد لێرە دایبنێ
+            const url = "https://script.google.com/macros/s/YOUR_APPS_SCRIPT_DEPLOYMENT_ID/exec"; // گۆڕینی ئەم لینکە بە لینکی ڕاستەقینەی ئەپس سکریپتەکەت
+            
+            const data = {
+                name: document.getElementById('userName').value,
+                message: document.getElementById('userData').value
+            };
+
+            fetch(url, {
+                method: 'POST',
+                // mode: 'no-cors', // ئەمە لابەرە بۆ ئەوەی Apps Script بتوانێت postData بە دروستی بخوێنێتەوە
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(response => {
+                if (response.ok) {
+                    return response.json(); // وەڵامی JSON لە Apps Script وەردەگرێت
+                } else {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || `هەڵەی HTTP! status: ${response.status}`);
+                    });
+                }
+            }).then(result => {
+                if (result.success) {
+                    alert("داتاکە پاشەکەوت کرا! ئێستا لە کۆمپیوتەریش دەیبینیت.");
+                    document.getElementById('externalDataForm').reset(); // پاککردنەوەی فۆرمەکە دوای ناردن
+                } else {
+                    alert("هەڵەیەک ڕوویدا: " + result.error);
+                }
+            }).catch(err => {
+                console.error("هەڵە لە ناردنی داتادا:", err);
+                alert("هەڵەیەک ڕوویدا لە ناردنی داتادا: " + err.message);
+            });
+        }
     </script>
 </body>
 </html>
