@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام محاسبة FIB المتقدم</title>
+    <style>
+        /* CSS Styles (Unchanged from previous versions to maintain look and feel) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #00ac9d 0%, #00a294 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #535353;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #474747;
+            font-size: 1.1em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #e0f3f2;
+            color: #666;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #00ac9d 0%, #045a52 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+        .icon-device { background: #e0f3f2; }
+        .icon-cash { background: #e0f3f2; }
+        .icon-total { background: #e8f5e9; }
+        .icon-profit { background: #f3e5f5; }
+        .icon-customers { background: #fce4ec; }
+        .icon-debt { background: #ffebee; }
+
+        .card-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00ac9d;
+            margin: 10px 0;
+        }
+
+        .card-label {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            color: #00ac9d;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #00ac9d;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .customer-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #e0f3f2;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .customer-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #e0f3f2;
+        }
+
+        .customer-item:hover {
+            background: #e0f3f2;
+        }
+
+        .customer-item.has-debt {
+            background: #fff3e0;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ac9d 0%, #005850 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-info {
+            background: #2196f3;
+            color: white;
+        }
+
+        .transactions-table {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #00ac9d 0%, #006c63 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e0f3f2;
+            text-align: right;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-buy {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge-sell {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .badge-payment {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .badge-deposit {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .badge-withdraw {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .delete-btn, .pay-btn, .view-btn {
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin: 2px;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .pay-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .view-btn {
+            background: #2196f3;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        .pay-btn:hover {
+            background: #388e3c;
+        }
+
+        .view-btn:hover {
+            background: #1976d2;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #29dccc 0%, #00897d 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .summary-card h4 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .summary-card p {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .modal-close {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #333;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .auto-save-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .auto-save-status.active {
+            display: block;
+        }
+        
+        /* **التعديل 3: قواعد CSS للطباعة - تصحيح إخفاء المحتوى** */
+        @media print {
+            /* إخفاء عناصر التنقل والإدخال والتحكم (ما عدا محتوى التقرير) */
+            .nav-tabs, .header, .dashboard, .auto-save-status, .transactions-table h2,
+            /* إخفاء الأزرار بشكل عام */
+            .btn {
+                display: none !important;
+            }
+            
+            /* إخفاء جميع التبويبات الأخرى ما عدا التقارير */
+            .tab-content:not(#reports) {
+                display: none !important;
+            }
+            
+            /* إظهار محتوى التقارير فقط وضبطه لملء الصفحة */
+            #reports {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+            
+            /* ضمان ظهور محتوى التقرير (form-section و summary-cards) وإزالة الظلال لجودة الطباعة */
+            #reports .form-section {
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                display: block !important;
+                background: white !important; 
+            }
+
+            #reports .summary-cards {
+                display: grid !important; /* لضمان بقاء تصميم الشبكة في التقرير */
+                box-shadow: none !important;
+            }
+
+            /* إخفاء الأزرار داخل قسم التقرير */
+            #reports .btn {
+                display: none !important;
+            }
+
+            /* ضبط خلفية الجسم والحاوية */
+            body, .container {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: none !important;
+            }
+
+            /* تحسين عرض الجداول والخطوط */
+            table, th, td {
+                border-color: #000 !important;
+                color: #000 !important;
+                border: 1px solid #000 !important;
+            }
+            thead {
+                background: #ccc !important;
+                color: #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 نظام محاسبة FIB المتقدم</h1>
+            <p>إدارة شاملة للعملاء والعمليات مع الحفظ التلقائي</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('operations')">📊 العمليات</button>
+            <button class="nav-tab" onclick="switchTab('customers')">👥 العملاء</button>
+            <button class="nav-tab" onclick="switchTab('debts')">💳 الديون</button>
+            <button class="nav-tab" onclick="switchTab('admin')">⚙️ الإدارة</button>
+            <button class="nav-tab" onclick="switchTab('reports')">📈 التقارير</button>
+            <button class="nav-tab" onclick="switchTab('settings')">🔧 الإعدادات</button>
+        </div>
+
+        <div id="operations" class="tab-content active">
+            <div class="dashboard">
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-device">💳</div>
+                        رصيد الجهاز
+                    </h3>
+                    <div class="card-value" id="deviceBalance">0</div>
+                    <div class="card-label">دينار عراقي</div>
+                </div>
+
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-cash">💵</div>
+                        النقد في الصندوق
+                    </h3>
+                    <div class="card-value" id="cashBalance">0</div>
+                    <div class="card-label">دينار عراقي</div>
+                </div>
+
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-total">📊</div>
+                        إجمالي الموجودات
+                    </h3>
+                    <div class="card-value" id="totalAssets">0</div>
+                    <div class="card-label">دينار عراقي</div>
+                </div>
+
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-profit">💰</div>
+                        صافي الربح
+                    </h3>
+                    <div class="card-value" id="netProfitCard">0</div>
+                    <div class="card-label">دينار عراقي</div>
+                </div>
+
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-customers">👥</div>
+                        عدد العملاء
+                    </h3>
+                    <div class="card-value" id="totalCustomers">0</div>
+                    <div class="card-label">عميل</div>
+                </div>
+
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-debt">💳</div>
+                        إجمالي الديون
+                    </h3>
+                    <div class="card-value" id="totalDebts">0</div>
+                    <div class="card-label">دينار عراقي</div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>تسجيل عملية جديدة</h2>
+                <form id="transactionForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>اسم العميل *</label>
+                            <input type="text" id="customerName" required list="customersList" autocomplete="off">
+                            <datalist id="customersList"></datalist>
+                        </div>
+
+                        <div class="form-group">
+                            <label>رقم الموبايل (اختياري)</label>
+                            <input type="tel" id="phoneNumber">
+                        </div>
+
+                        <div class="form-group">
+                            <label>نوع المعاملة *</label>
+                            <select id="transactionType" required>
+                                <option value="">اختر النوع</option>
+                                <option value="buy">شراء (من العميل)</option>
+                                <option value="sell">بيع (للعميل)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>المبلغ الكلي *</label>
+                            <input type="number" id="totalAmount" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>المبلغ المدفوع *</label>
+                            <input type="number" id="paidAmount" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>العمولة (من العميل) *</label>
+                            <input type="number" id="commission" step="0.01" required value="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label>الملاحظات</label>
+                            <textarea id="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>ملاحظة:</strong> العمولة ستضاف إلى رصيدك. المبلغ المتبقي = المبلغ الكلي - المبلغ المدفوع
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        ✅ تسجيل العملية
+                    </button>
+                </form>
+            </div>
+
+            <div class="transactions-table">
+                <h2 style="color: #667eea; margin-bottom: 20px;">سجل العمليات</h2>
+                
+                <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex-grow: 1; min-width: 250px;">
+                        <label for="transactionSearch" style="font-weight: 600; margin-bottom: 5px;">بحث (العميل، الملاحظات، ID):</label>
+                        <input type="text" id="transactionSearch" oninput="renderTransactions()" placeholder="أدخل كلمة للبحث...">
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionFilter" style="font-weight: 600; margin-bottom: 5px;">فرز حسب النوع:</label>
+                        <select id="transactionFilter" onchange="renderTransactions()" style="padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0; font-size: 1em;">
+                            <option value="all">الكل</option>
+                            <option value="sell">بيع (للعميل)</option>
+                            <option value="buy">شراء (من العميل)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <h4>إجمالي المبيعات</h4>
+                        <p id="totalSales">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>إجمالي المشتريات</h4>
+                        <p id="totalPurchases">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>إجمالي العمولات</h4>
+                        <p id="totalCommissions">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>عدد العمليات</h4>
+                        <p id="totalTransactions">0</p>
+                    </div>
+                </div>
+
+                <table id="transactionsTable">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>العميل</th>
+                            <th>النوع</th>
+                            <th>المبلغ الكلي</th>
+                            <th>المدفوع</th>
+                            <th>المتبقي</th>
+                            <th>العمولة</th>
+                            <th>الملاحظات</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="customers" class="tab-content">
+            <div class="form-section">
+                <h2>📋 قائمة العملاء الدائمين</h2>
+                <input type="text" id="searchCustomer" placeholder="🔍 ابحث عن عميل..." style="width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; margin-bottom: 20px;">
+                
+                <div id="customersContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;"></div>
+            </div>
+        </div>
+
+        <div id="debts" class="tab-content">
+            <div class="dashboard">
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-debt">💳</div>
+                        إجمالي الديون
+                    </h3>
+                    <div class="card-value" id="totalDebtsPage">0</div>
+                    <div class="card-label">دينار عراقي</div>
+                </div>
+
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-customers">👥</div>
+                        عملاء لديهم ديون
+                    </h3>
+                    <div class="card-value" id="customersWithDebts">0</div>
+                    <div class="card-label">عميل</div>
+                </div>
+            </div>
+
+            <div class="transactions-table">
+                <h2 style="color: #667eea; margin-bottom: 20px;">سجل الديون والمدفوعات</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>الموبايل</th>
+                            <th>إجمالي الديون</th>
+                            <th>آخر معاملة</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="debtsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin" class="tab-content">
+            <div class="alert alert-info">
+                📌 من هنا يمكنك إدارة الرصيد الأولي وإضافة أو سحب الأموال من الجهاز والصندوق
+            </div>
+
+            <div class="dashboard">
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-device">💳</div>
+                        رصيد الجهاز الحالي
+                    </h3>
+                    <div class="card-value" id="adminDeviceBalance">0</div>
+                    <div class="card-label">دينار عراقي</div>
+                </div>
+
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-cash">💵</div>
+                        النقد في الصندوق
+                    </h3>
+                    <div class="card-value" id="adminCashBalance">0</div>
+                    <div class="card-label">دينار عراقي</div>
+                </div>
+
+                <div class="card">
+                    <h3>
+                        <div class="card-icon icon-profit">💰</div>
+                        إجمالي الأرباح
+                    </h3>
+                    <div class="card-value" id="adminProfits">0</div>
+                    <div class="card-label">دينار عراقي</div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>إدارة رصيد الجهاز</h2>
+                <form id="deviceManagementForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>نوع العملية *</label>
+                            <select id="deviceOperationType" required>
+                                <option value="">اختر العملية</option>
+                                <option value="deposit">إيداع (زيادة الرصيد)</option>
+                                <option value="withdraw">سحب (تقليل الرصيد)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>المبلغ *</label>
+                            <input type="number" id="deviceAmount" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>الملاحظات</label>
+                            <textarea id="deviceNotes" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">
+                        💳 تنفيذ العملية على الجهاز
+                    </button>
+                </form>
+            </div>
+
+            <div class="form-section">
+                <h2>إدارة الصندوق النقدي</h2>
+                <form id="cashManagementForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>نوع العملية *</label>
+                            <select id="cashOperationType" required>
+                                <option value="">اختر العملية</option>
+                                <option value="deposit">إيداع (زيادة النقد)</option>
+                                <option value="withdraw">سحب (تقليل النقد)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>المبلغ *</label>
+                            <input type="number" id="cashAmount" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>الملاحظات</label>
+                            <textarea id="cashNotes" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning">
+                        💵 تنفيذ العملية على الصندوق
+                    </button>
+                </form>
+            </div>
+
+            <div class="form-section">
+                <h2>إدارة البيانات والنسخ الاحتياطي</h2>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="exportToExcel()">
+                        📊 تصدير إلى Excel
+                    </button>
+                    <button class="btn btn-primary" onclick="exportToTxt()">
+                        📄 تصدير إلى TXT
+                    </button>
+                    <button class="btn btn-info" onclick="importData()">
+                        📥 استيراد البيانات
+                    </button>
+                    <button class="btn btn-danger" onclick="clearAllData()">
+                        🗑️ مسح جميع البيانات
+                    </button>
+                </div>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </div>
+
+            <div class="transactions-table">
+                <h2 style="color: #667eea; margin-bottom: 20px;">سجل عمليات الإدارة</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ والوقت</th>
+                            <th>نوع العملية</th>
+                            <th>الحساب</th>
+                            <th>المبلغ</th>
+                            <th>الملاحظات</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminOperationsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="reports" class="tab-content">
+            <div class="form-section">
+                <h2>📊 التقارير والإحصائيات الشاملة</h2>
+                
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <h4>إجمالي المبيعات</h4>
+                        <p id="reportTotalSales">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>إجمالي المشتريات</h4>
+                        <p id="reportTotalPurchases">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>إجمالي العمولات</h4>
+                        <p id="reportTotalCommissions">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>صافي الربح</h4>
+                        <p id="reportNetProfit">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>رصيد الجهاز</h4>
+                        <p id="reportDeviceBalance">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>رصيد الصندوق</h4>
+                        <p id="reportCashBalance">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>إجمالي الموجودات</h4>
+                        <p id="reportTotalAssets">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>عدد العمليات</h4>
+                        <p id="reportTotalOps">0</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button class="btn btn-primary" onclick="printReport()">
+                        🖨️ طباعة التقرير
+                    </button>
+                    <button class="btn btn-success" onclick="exportToExcel()">
+                        📊 تصدير Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings" class="tab-content">
+            <div class="form-section">
+                <h2>⚙️ إعدادات النظام</h2>
+                
+                <div class="alert alert-warning">
+                    ⚠️ <strong>تنبيه:</strong> لأسباب أمنية، المتصفحات لا تسمح بالوصول المباشر لمجلدات النظام. سيتم حفظ الملفات في مجلد التنزيلات الافتراضي.
+                </div>
+
+                <h3 style="color: #667eea; margin: 25px 0 15px 0;">الحفظ التلقائي</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>تفعيل الحفظ التلقائي</label>
+                        <select id="autoSaveEnabled">
+                            <option value="true">مفعّل</option>
+                            <option value="false">معطّل</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>فترة الحفظ التلقائي</label>
+                        <select id="autoSaveInterval">
+                            <option value="30">كل 30 ثانية</option>
+                            <option value="60">كل دقيقة</option>
+                            <option value="120">كل دقيقتين</option>
+                            <option value="300">كل 5 دقائق</option>
+                            <option value="600">كل 10 دقائق</option>
+                            <option value="1800">كل 30 دقيقة</option>
+                            <option value="3600">كل ساعة</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>نوع ملف الحفظ التلقائي</label>
+                        <select id="autoSaveFormat">
+                            <option value="json">JSON (للاستيراد)</option>
+                            <option value="excel">Excel</option>
+                            <option value="txt">TXT</option>
+                            <option value="all">الكل</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    💾 حفظ الإعدادات
+                </button>
+                <button class="btn btn-success" onclick="testAutoSave()">
+                    🧪 اختبار الحفظ التلقائي
+                </button>
+
+                <div id="autoSaveLog" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 10px; max-height: 200px; overflow-y: auto;">
+                    <strong>سجل الحفظ التلقائي:</strong>
+                    <div id="autoSaveLogContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="customerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalCustomerName" style="color: #667eea;"></h2>
+                <button class="modal-close" onclick="closeCustomerModal()">✖ إغلاق</button>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">رقم الموبايل</div>
+                    <div class="info-value" id="modalPhone">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">إجمالي العمليات</div>
+                    <div class="info-value" id="modalTotalOps">0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">إجمالي المشتريات</div>
+                    <div class="info-value" id="modalTotalBuy">0 IQD</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">إجمالي المبيعات</div>
+                    <div class="info-value" id="modalTotalSell">0 IQD</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">إجمالي العمولات</div>
+                    <div class="info-value" id="modalTotalCommission">0 IQD</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">الديون المتبقية</div>
+                    <div class="info-value" id="modalTotalDebt" style="color: #f44336;">0 IQD</div>
+                </div>
+            </div>
+
+            <h3 style="color: #667eea; margin: 20px 0;">سجل العمليات</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>النوع</th>
+                            <th>المبلغ الكلي</th>
+                            <th>المدفوع</th>
+                            <th>المتبقي</th>
+                            <th>العمولة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTransactionsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="color: #667eea;">دفع دين</h2>
+                <button class="modal-close" onclick="closePaymentModal()">✖ إغلاق</button>
+            </div>
+            
+            <form id="paymentForm">
+                <input type="hidden" id="paymentCustomerName">
+                <input type="hidden" id="paymentTransactionId">
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">اسم العميل</div>
+                        <div class="info-value" id="paymentCustomerDisplay"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">المبلغ المتبقي</div>
+                        <div class="info-value" id="paymentRemainingDisplay" style="color: #f44336;"></div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>المبلغ المدفوع *</label>
+                    <input type="number" id="paymentAmount" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>الملاحظات</label>
+                    <textarea id="paymentNotes" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    💰 تسجيل الدفعة
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="auto-save-status" id="autoSaveStatus">
+        <span id="autoSaveStatusText">جاري الحفظ...</span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        let transactions = [];
+        let adminOperations = [];
+        let customers = {};
+        let deviceBalance = 0;
+        let cashBalance = 0;
+        let settings = {
+            autoSaveEnabled: true,
+            autoSaveInterval: 300,
+            autoSaveFormat: 'json'
+        };
+        let autoSaveTimer = null;
+
+        function loadData() {
+            const savedData = localStorage.getItem('fibData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                transactions = data.transactions || [];
+                adminOperations = data.adminOperations || [];
+                customers = data.customers || {};
+                deviceBalance = data.deviceBalance || 0;
+                cashBalance = data.cashBalance || 0;
+                settings = data.settings || settings;
+            }
+            
+            updateDisplay();
+            renderTransactions();
+            renderAdminOperations();
+            renderCustomers();
+            renderDebts();
+            loadSettings();
+            startAutoSave();
+        }
+
+        function saveData() {
+            const data = {
+                transactions,
+                adminOperations,
+                customers,
+                deviceBalance,
+                cashBalance,
+                settings,
+                lastSaved: new Date().toISOString()
+            };
+            localStorage.setItem('fibData', JSON.stringify(data));
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            
+            const clickedButton = event.target.closest('.nav-tab');
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
+            
+            updateDisplay();
+
+            // تحديث محتوى التبويبات عند الفتح
+            if (tabName === 'operations') {
+                renderTransactions();
+            } else if (tabName === 'debts') {
+                renderDebts();
+            } else if (tabName === 'customers') {
+                renderCustomers();
+            }
+        }
+
+        function updateDisplay() {
+            const elements = ['deviceBalance', 'adminDeviceBalance', 'reportDeviceBalance'];
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatCurrency(deviceBalance);
+            });
+            
+            const cashElements = ['cashBalance', 'adminCashBalance', 'reportCashBalance'];
+            cashElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatCurrency(cashBalance);
+            });
+            
+            const total = deviceBalance + cashBalance;
+            const totalElements = ['totalAssets', 'reportTotalAssets'];
+            totalElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatCurrency(total);
+            });
+            
+            let totalSales = 0;
+            let totalPurchases = 0;
+            let totalCommissions = 0;
+            let totalDebts = 0;
+            
+            
+            Object.values(customers).forEach(c => {
+                 totalDebts += c.totalDebt;
+            });
+            
+            transactions.forEach(t => {
+                const amount = parseFloat(t.totalAmount);
+                totalCommissions += parseFloat(t.commission);
+                
+                if (t.type === 'sell') {
+                    totalSales += amount;
+                } else {
+                    totalPurchases += amount;
+                }
+            });
+            
+            const netProfit = totalCommissions;
+            
+            const salesElements = ['totalSales', 'reportTotalSales'];
+            salesElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatCurrency(totalSales);
+            });
+            
+            const purchaseElements = ['totalPurchases', 'reportTotalPurchases'];
+            purchaseElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatCurrency(totalPurchases);
+            });
+            
+            const commissionElements = ['totalCommissions', 'reportTotalCommissions'];
+            commissionElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatCurrency(totalCommissions);
+            });
+            
+            const profitElements = ['netProfitCard', 'adminProfits', 'reportNetProfit'];
+            profitElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatCurrency(netProfit);
+            });
+            
+            const transElements = ['totalTransactions', 'reportTotalOps'];
+            transElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = transactions.length;
+            });
+
+            const customerCount = Object.keys(customers).length;
+            const totalCustomersEl = document.getElementById('totalCustomers');
+            if (totalCustomersEl) totalCustomersEl.textContent = customerCount;
+
+            const debtElements = ['totalDebts', 'totalDebtsPage'];
+            debtElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatCurrency(totalDebts);
+            });
+
+            let customersWithDebtsCount = 0;
+            Object.values(customers).forEach(c => {
+                if (c.totalDebt > 0.01) customersWithDebtsCount++; 
+            });
+            const customersWithDebtsEl = document.getElementById('customersWithDebts');
+            if (customersWithDebtsEl) customersWithDebtsEl.textContent = customersWithDebtsCount;
+
+            updateCustomersList();
+            saveData(); 
+        }
+
+        function updateCustomersList() {
+            const datalist = document.getElementById('customersList');
+            datalist.innerHTML = '';
+            Object.keys(customers).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ar-IQ', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        function formatDateTime(date) {
+            return new Intl.DateTimeFormat('ar-IQ', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(new Date(date));
+        }
+
+        document.getElementById('transactionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const customerName = document.getElementById('customerName').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const transactionType = document.getElementById('transactionType').value;
+            const totalAmount = parseFloat(document.getElementById('totalAmount').value);
+            const paidAmount = parseFloat(document.getElementById('paidAmount').value);
+            const commission = parseFloat(document.getElementById('commission').value);
+            const notes = document.getElementById('notes').value;
+            
+            const remainingAmount = totalAmount - paidAmount;
+
+            if (paidAmount > totalAmount) {
+                alert('⚠️ المبلغ المدفوع لا يمكن أن يكون أكبر من المبلغ الكلي للعملية!');
+                return;
+            }
+            
+            if (transactionType === 'sell') {
+                deviceBalance -= totalAmount;
+                cashBalance += paidAmount;
+            } else {
+                deviceBalance += totalAmount;
+                cashBalance -= paidAmount;
+            }
+
+            cashBalance += commission;
+            
+            const transaction = {
+                id: Date.now(),
+                customerName,
+                phoneNumber,
+                type: transactionType,
+                totalAmount,
+                paidAmount,
+                remainingAmount,
+                commission,
+                notes,
+                date: new Date().toISOString()
+            };
+            
+            transactions.unshift(transaction); 
+
+            if (!customers[customerName]) {
+                customers[customerName] = {
+                    name: customerName,
+                    phone: phoneNumber,
+                    transactions: [],
+                    totalBuy: 0,
+                    totalSell: 0,
+                    totalCommission: 0,
+                    totalDebt: 0,
+                    lastTransaction: new Date().toISOString()
+                };
+            }
+
+            customers[customerName].phone = phoneNumber || customers[customerName].phone;
+            customers[customerName].transactions.push(transaction.id);
+            customers[customerName].lastTransaction = transaction.date;
+            customers[customerName].totalCommission += commission;
+            
+            if (transactionType === 'buy') {
+                customers[customerName].totalBuy += totalAmount;
+            } else {
+                customers[customerName].totalSell += totalAmount;
+            }
+
+            customers[customerName].totalDebt += remainingAmount;
+            
+            updateDisplay();
+            renderTransactions();
+            renderCustomers();
+            renderDebts();
+            
+            this.reset();
+            alert('✅ تم تسجيل العملية بنجاح!');
+        });
+
+        document.getElementById('deviceManagementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const operationType = document.getElementById('deviceOperationType').value;
+            const amount = parseFloat(document.getElementById('deviceAmount').value);
+            const notes = document.getElementById('deviceNotes').value;
+            
+            if (operationType === 'deposit') {
+                deviceBalance += amount;
+            } else {
+                if (deviceBalance < amount) {
+                    alert('⚠️ لا يوجد رصيد كافٍ في الجهاز لإجراء هذا السحب!');
+                    return;
+                }
+                deviceBalance -= amount;
+            }
+            
+            const operation = {
+                id: Date.now(),
+                type: operationType,
+                account: 'device',
+                amount,
+                notes,
+                date: new Date().toISOString()
+            };
+            
+            adminOperations.unshift(operation);
+            updateDisplay();
+            renderAdminOperations();
+            
+            this.reset();
+            alert('✅ تم تنفيذ العملية على الجهاز بنجاح!');
+        });
+
+        document.getElementById('cashManagementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const operationType = document.getElementById('cashOperationType').value;
+            const amount = parseFloat(document.getElementById('cashAmount').value);
+            const notes = document.getElementById('cashNotes').value;
+            
+            if (operationType === 'deposit') {
+                cashBalance += amount;
+            } else {
+                if (cashBalance < amount) {
+                    alert('⚠️ لا يوجد نقد كافٍ في الصندوق لإجراء هذا السحب!');
+                    return;
+                }
+                cashBalance -= amount;
+            }
+            
+            const operation = {
+                id: Date.now(),
+                type: operationType,
+                account: 'cash',
+                amount,
+                notes,
+                date: new Date().toISOString()
+            };
+            
+            adminOperations.unshift(operation);
+            updateDisplay();
+            renderAdminOperations();
+            
+            this.reset();
+            alert('✅ تم تنفيذ العملية على الصندوق بنجاح!');
+        });
+
+        // **التعديل 1: تحديث دالة عرض العمليات لتشمل الفلتر النصي**
+        function renderTransactions() {
+            const tbody = document.getElementById('transactionsBody');
+            tbody.innerHTML = '';
+            
+            // قراءة قيم الفلاتر
+            const filterValue = document.getElementById('transactionFilter')?.value || 'all';
+            const searchValue = document.getElementById('transactionSearch')?.value.toLowerCase().trim() || '';
+
+            // تطبيق فلاتر النوع والبحث النصي
+            const filteredTransactions = transactions.filter(t => {
+                // فلتر النوع
+                const typeMatch = filterValue === 'all' || t.type === filterValue;
+                
+                // فلتر البحث النصي (اسم العميل، الملاحظات، ID)
+                const searchMatch = searchValue === '' || 
+                                    t.customerName.toLowerCase().includes(searchValue) ||
+                                    (t.notes && t.notes.toLowerCase().includes(searchValue)) ||
+                                    t.id.toString().includes(searchValue);
+                
+                return typeMatch && searchMatch;
+            });
+
+            filteredTransactions.forEach(t => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${formatDateTime(t.date)}</td>
+                    <td><strong>${t.customerName}</strong></td>
+                    <td><span class="badge ${t.type === 'buy' ? 'badge-buy' : 'badge-sell'}">${t.type === 'buy' ? 'شراء' : 'بيع'}</span></td>
+                    <td>${formatCurrency(t.totalAmount)}</td>
+                    <td>${formatCurrency(t.paidAmount)}</td>
+                    <td style="color: ${t.remainingAmount > 0.01 ? '#f44336' : '#4caf50'};">${formatCurrency(t.remainingAmount)}</td>
+                    <td style="color: #4caf50;">+${formatCurrency(t.commission)}</td>
+                    <td>${t.notes || '-'}</td>
+                    <td>
+                        ${t.remainingAmount > 0.01 ? `<button class="pay-btn" onclick="openPaymentModal('${t.customerName}', ${t.id}, ${t.remainingAmount})">💰 دفع</button>` : ''}
+                        <button class="delete-btn" onclick="deleteTransaction(${t.id})">🗑️</button>
+                    </td>
+                `;
+            });
+        }
+
+        function renderAdminOperations() {
+            const tbody = document.getElementById('adminOperationsBody');
+            tbody.innerHTML = '';
+            
+            adminOperations.forEach(op => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${formatDateTime(op.date)}</td>
+                    <td><span class="badge ${op.type === 'deposit' ? 'badge-deposit' : 'badge-withdraw'}">${op.type === 'deposit' ? 'إيداع' : 'سحب'}</span></td>
+                    <td>${op.account === 'device' ? 'الجهاز' : 'الصندوق'}</td>
+                    <td><strong>${formatCurrency(op.amount)}</strong></td>
+                    <td>${op.notes || '-'}</td>
+                    <td><button class="delete-btn" onclick="deleteAdminOperation(${op.id})">🗑️</button></td>
+                `;
+            });
+        }
+
+        function renderCustomers() {
+            const container = document.getElementById('customersContainer');
+            const customersList = Object.values(customers).sort((a, b) => 
+                new Date(b.lastTransaction) - new Date(a.lastTransaction)
+            );
+
+            container.innerHTML = '';
+            
+            customersList.forEach(customer => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.cursor = 'pointer';
+                card.onclick = () => openCustomerModal(customer.name);
+                
+                card.innerHTML = `
+                    <h3 style="color: #667eea; margin-bottom: 10px;">${customer.name}</h3>
+                    <p style="color: #666; margin-bottom: 5px;">📱 ${customer.phone || 'لا يوجد'}</p>
+                    <p style="color: #666; margin-bottom: 5px;">📊 عدد العمليات: <strong>${customer.transactions.length}</strong></p>
+                    <p style="color: #666; margin-bottom: 5px;">💰 العمولات: <strong style="color: #4caf50;">${formatCurrency(customer.totalCommission)}</strong></p>
+                    ${customer.totalDebt > 0.01 ? `<p style="color: #f44336; font-weight: bold;">💳 ديون: ${formatCurrency(customer.totalDebt)}</p>` : ''}
+                    <p style="color: #999; font-size: 0.85em; margin-top: 10px;">آخر معاملة: ${formatDateTime(customer.lastTransaction)}</p>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function renderDebts() {
+            const tbody = document.getElementById('debtsBody');
+            tbody.innerHTML = '';
+            
+            Object.values(customers)
+                .filter(c => c.totalDebt > 0.01) 
+                .sort((a, b) => b.totalDebt - a.totalDebt)
+                .forEach(customer => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td><strong>${customer.name}</strong></td>
+                        <td>${customer.phone || '-'}</td>
+                        <td style="color: #f44336; font-weight: bold;">${formatCurrency(customer.totalDebt)}</td>
+                        <td>${formatDateTime(customer.lastTransaction)}</td>
+                        <td>
+                            <button class="view-btn" onclick="openCustomerModal('${customer.name}')">👁️ عرض</button>
+                            <button class="pay-btn" onclick="openCombinedPaymentModal('${customer.name}', ${customer.totalDebt})">💰 دفع الدين</button>
+                        </td>
+                    `;
+                });
+        }
+
+        function openCustomerModal(customerName) {
+            const customer = customers[customerName];
+            if (!customer) return;
+
+            document.getElementById('modalCustomerName').textContent = customer.name;
+            document.getElementById('modalPhone').textContent = customer.phone || '-';
+            document.getElementById('modalTotalOps').textContent = customer.transactions.length;
+            document.getElementById('modalTotalBuy').textContent = formatCurrency(customer.totalBuy) + ' IQD';
+            document.getElementById('modalTotalSell').textContent = formatCurrency(customer.totalSell) + ' IQD';
+            document.getElementById('modalTotalCommission').textContent = formatCurrency(customer.totalCommission) + ' IQD';
+            document.getElementById('modalTotalDebt').textContent = formatCurrency(customer.totalDebt) + ' IQD';
+
+            const tbody = document.getElementById('modalTransactionsBody');
+            tbody.innerHTML = '';
+            
+            const customerTransactions = transactions
+                .filter(t => customer.transactions.includes(t.id))
+                .sort((a, b) => new Date(b.date) - new Date(a.date)); 
+
+            customerTransactions.forEach(t => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${formatDateTime(t.date)}</td>
+                    <td><span class="badge ${t.type === 'buy' ? 'badge-buy' : 'badge-sell'}">${t.type === 'buy' ? 'شراء' : 'بيع'}</span></td>
+                    <td>${formatCurrency(t.totalAmount)}</td>
+                    <td>${formatCurrency(t.paidAmount)}</td>
+                    <td style="color: ${t.remainingAmount > 0.01 ? '#f44336' : '#4caf50'};">${formatCurrency(t.remainingAmount)}</td>
+                    <td style="color: #4caf50;">+${formatCurrency(t.commission)}</td>
+                `;
+            });
+
+            document.getElementById('customerModal').classList.add('active');
+        }
+
+        function closeCustomerModal() {
+            document.getElementById('customerModal').classList.remove('active');
+        }
+
+        function openPaymentModal(customerName, transactionId, remainingAmount) {
+            document.getElementById('paymentCustomerName').value = customerName;
+            document.getElementById('paymentTransactionId').value = transactionId;
+            document.getElementById('paymentCustomerDisplay').textContent = customerName;
+            document.getElementById('paymentRemainingDisplay').textContent = formatCurrency(remainingAmount) + ' IQD (للعملية ID: ' + transactionId + ')';
+            document.getElementById('paymentAmount').max = remainingAmount;
+            document.getElementById('paymentNotes').value = '';
+            document.getElementById('paymentModal').classList.add('active');
+        }
+        
+        function openCombinedPaymentModal(customerName, totalDebt) {
+            document.getElementById('paymentCustomerName').value = customerName;
+            document.getElementById('paymentTransactionId').value = 'combined'; 
+            document.getElementById('paymentCustomerDisplay').textContent = customerName;
+            document.getElementById('paymentRemainingDisplay').textContent = formatCurrency(totalDebt) + ' IQD (دين كلي)';
+            document.getElementById('paymentAmount').max = totalDebt;
+            document.getElementById('paymentNotes').value = `دفعة مجمعة للدين الكلي. تطبق على العمليات الأقدم أولاً.`;
+            document.getElementById('paymentModal').classList.add('active');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+            document.getElementById('paymentForm').reset();
+        }
+
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const customerName = document.getElementById('paymentCustomerName').value;
+            const transactionIdValue = document.getElementById('paymentTransactionId').value;
+            const paymentAmount = parseFloat(document.getElementById('paymentAmount').value);
+            const notes = document.getElementById('paymentNotes').value;
+            
+            if (paymentAmount <= 0) {
+                alert('⚠️ يرجى إدخال مبلغ دفع صالح!');
+                return;
+            }
+
+            let amountToApply = paymentAmount;
+
+            if (transactionIdValue === 'combined') {
+                
+                let customerTransactions = transactions
+                    .filter(t => t.customerName === customerName && t.remainingAmount > 0.01)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date)); 
+
+                for (const t of customerTransactions) {
+                    if (amountToApply <= 0.01) break; 
+                    
+                    const payOnTransaction = Math.min(amountToApply, t.remainingAmount);
+                    
+                    t.remainingAmount -= payOnTransaction;
+                    t.paidAmount += payOnTransaction;
+                    amountToApply -= payOnTransaction;
+                    
+                    if (t.remainingAmount < 0.01) t.remainingAmount = 0; 
+                }
+                
+            } else {
+                
+                const transactionId = parseInt(transactionIdValue);
+                const transaction = transactions.find(t => t.id === transactionId);
+
+                if (!transaction) return;
+
+                if (paymentAmount > transaction.remainingAmount) {
+                    alert('⚠️ المبلغ المدفوع أكبر من المبلغ المتبقي لهذه العملية!');
+                    return;
+                }
+
+                transaction.remainingAmount -= paymentAmount;
+                transaction.paidAmount += paymentAmount;
+                if (transaction.remainingAmount < 0.01) transaction.remainingAmount = 0;
+            }
+
+            
+            cashBalance += paymentAmount;
+            if (customers[customerName]) {
+                customers[customerName].totalDebt -= paymentAmount;
+                if (customers[customerName].totalDebt < 0) customers[customerName].totalDebt = 0; 
+            }
+
+            
+            updateDisplay();
+            renderTransactions();
+            renderCustomers();
+            renderDebts();
+            closePaymentModal();
+            
+            alert(`✅ تم تسجيل دفعة ${formatCurrency(paymentAmount)} لـ ${customerName} بنجاح!`);
+        });
+
+        document.getElementById('searchCustomer').addEventListener('input', function(e) {
+            const search = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('#customersContainer .card');
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(search) ? 'block' : 'none';
+            });
+        });
+
+        function deleteTransaction(id) {
+            if (confirm('هل أنت متأكد من حذف هذه العملية؟')) {
+                const transaction = transactions.find(t => t.id === id);
+                
+                if (transaction.type === 'sell') {
+                    deviceBalance += transaction.totalAmount;
+                    cashBalance -= transaction.paidAmount;
+                } else {
+                    deviceBalance -= transaction.totalAmount;
+                    cashBalance += transaction.paidAmount;
+                }
+
+                cashBalance -= transaction.commission;
+
+                if (customers[transaction.customerName]) {
+                    const customer = customers[transaction.customerName];
+                    customer.transactions = customer.transactions.filter(tid => tid !== id);
+                    customer.totalCommission -= transaction.commission;
+                    customer.totalDebt -= transaction.remainingAmount;
+                    
+                    if (transaction.type === 'buy') {
+                        customer.totalBuy -= transaction.totalAmount;
+                    } else {
+                        customer.totalSell -= transaction.totalAmount;
+                    }
+
+                    if (customer.transactions.length === 0 && customer.totalDebt < 0.01 && customer.totalCommission < 0.01) {
+                        delete customers[transaction.customerName];
+                    }
+                }
+                
+                transactions = transactions.filter(t => t.id !== id);
+                updateDisplay();
+                renderTransactions();
+                renderCustomers();
+                renderDebts();
+            }
+        }
+
+        function deleteAdminOperation(id) {
+            if (confirm('هل أنت متأكد من حذف هذه العملية؟')) {
+                const operation = adminOperations.find(op => op.id === id);
+                
+                if (operation.account === 'device') {
+                    if (operation.type === 'deposit') {
+                        deviceBalance -= operation.amount;
+                    } else {
+                        deviceBalance += operation.amount;
+                    }
+                } else {
+                    if (operation.type === 'deposit') {
+                        cashBalance -= operation.amount;
+                    } else {
+                        cashBalance += operation.amount;
+                    }
+                }
+                
+                adminOperations = adminOperations.filter(op => op.id !== id);
+                updateDisplay();
+                renderAdminOperations();
+            }
+        }
+
+        function exportToExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert("⚠️ لا يمكن تصدير Excel. تأكد من أن ملف XLSX.full.min.js تم تحميله بنجاح.");
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            
+            const transData = transactions.map(t => ({
+                'التاريخ': formatDateTime(t.date),
+                'اسم العميل': t.customerName,
+                'الموبايل': t.phoneNumber || '-',
+                'النوع': t.type === 'buy' ? 'شراء' : 'بيع',
+                'المبلغ الكلي': t.totalAmount,
+                'المبلغ المدفوع': t.paidAmount,
+                'المتبقي': t.remainingAmount,
+                'العمولة': t.commission,
+                'الملاحظات': t.notes || '-'
+            }));
+            
+            const ws1 = XLSX.utils.json_to_sheet(transData);
+            XLSX.utils.book_append_sheet(wb, ws1, 'العمليات');
+            
+            const customersData = Object.values(customers).map(c => ({
+                'اسم العميل': c.name,
+                'الموبايل': c.phone || '-',
+                'عدد العمليات': c.transactions.length,
+                'إجمالي المشتريات': c.totalBuy,
+                'إجمالي المبيعات': c.totalSell,
+                'إجمالي العمولات': c.totalCommission,
+                'الديون المتبقية': c.totalDebt,
+                'آخر معاملة': formatDateTime(c.lastTransaction)
+            }));
+            
+            const ws2 = XLSX.utils.json_to_sheet(customersData);
+            XLSX.utils.book_append_sheet(wb, ws2, 'العملاء');
+            
+            const adminData = adminOperations.map(op => ({
+                'التاريخ': formatDateTime(op.date),
+                'النوع': op.type === 'deposit' ? 'إيداع' : 'سحب',
+                'الحساب': op.account === 'device' ? 'الجهاز' : 'الصندوق',
+                'المبلغ': op.amount,
+                'الملاحظات': op.notes || '-'
+            }));
+            
+            const ws3 = XLSX.utils.json_to_sheet(adminData);
+            XLSX.utils.book_append_sheet(wb, ws3, 'عمليات الإدارة');
+            
+            const summaryData = [{
+                'البند': 'رصيد الجهاز',
+                'المبلغ': deviceBalance
+            }, {
+                'البند': 'رصيد الصندوق',
+                'المبلغ': cashBalance
+            }, {
+                'البند': 'إجمالي الموجودات',
+                'المبلغ': deviceBalance + cashBalance
+            }, {
+                'البند': 'عدد العملاء',
+                'المبلغ': Object.keys(customers).length
+            }, {
+                'البند': 'عدد العمليات',
+                'المبلغ': transactions.length
+            }];
+            
+            const ws4 = XLSX.utils.json_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, ws4, 'الملخص');
+            
+            const timestamp = new Date().toISOString().slice(0,10);
+            XLSX.writeFile(wb, `FIB_Accounting_${timestamp}.xlsx`);
+            
+            logAutoSave('تم تصدير البيانات إلى Excel بنجاح');
+        }
+
+        function exportToTxt() {
+            let content = '=================================\n';
+            content += 'نظام محاسبة FIB - تقرير شامل\n';
+            content += '=================================\n\n';
+            content += `تاريخ التقرير: ${formatDateTime(new Date())}\n\n`;
+            
+            content += '--- الموجودات الحالية ---\n';
+            content += `رصيد الجهاز: ${formatCurrency(deviceBalance)} دينار عراقي\n`;
+            content += `رصيد الصندوق: ${formatCurrency(cashBalance)} دينار عراقي\n`;
+            content += `إجمالي الموجودات: ${formatCurrency(deviceBalance + cashBalance)} دينار عراقي\n\n`;
+            
+            content += '--- الإحصائيات ---\n';
+            content += `عدد العملاء: ${Object.keys(customers).length}\n`;
+            content += `عدد العمليات: ${transactions.length}\n\n`;
+            
+            content += '--- سجل العمليات ---\n';
+            transactions.forEach((t, index) => {
+                content += `\nعملية ${index + 1}:\n`;
+                content += `  التاريخ: ${formatDateTime(t.date)}\n`;
+                content += `  العميل: ${t.customerName}\n`;
+                content += `  الموبايل: ${t.phoneNumber || '-'}\n`;
+                content += `  النوع: ${t.type === 'buy' ? 'شراء' : 'بيع'}\n`;
+                content += `  المبلغ الكلي: ${formatCurrency(t.totalAmount)}\n`;
+                content += `  المبلغ المدفوع: ${formatCurrency(t.paidAmount)}\n`;
+                content += `  المتبقي: ${formatCurrency(t.remainingAmount)}\n`;
+                content += `  العمولة: ${formatCurrency(t.commission)}\n`;
+                content += `  الملاحظات: ${t.notes || '-'}\n`;
+            });
+            
+            content += '\n--- معلومات العملاء ---\n';
+            Object.values(customers).forEach((c, index) => {
+                content += `\nعميل ${index + 1}:\n`;
+                content += `  الاسم: ${c.name}\n`;
+                content += `  الموبايل: ${c.phone || '-'}\n`;
+                content += `  عدد العمليات: ${c.transactions.length}\n`;
+                content += `  إجمالي المشتريات: ${formatCurrency(c.totalBuy)}\n`;
+                content += `  إجمالي المبيعات: ${formatCurrency(c.totalSell)}\n`;
+                content += `  إجمالي العمولات: ${formatCurrency(c.totalCommission)}\n`;
+                content += `  الديون المتبقية: ${formatCurrency(c.totalDebt)}\n`;
+            });
+            
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const timestamp = new Date().toISOString().slice(0,10);
+            a.download = `FIB_Accounting_${timestamp}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            logAutoSave('تم تصدير البيانات إلى TXT بنجاح');
+        }
+
+        function exportToJSON() {
+            const data = {
+                transactions,
+                adminOperations,
+                customers,
+                deviceBalance,
+                cashBalance,
+                settings,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const timestamp = new Date().toISOString().slice(0,10);
+            a.download = `FIB_Accounting_Backup_${timestamp}.json`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            logAutoSave('تم تصدير البيانات إلى JSON بنجاح');
+        }
+
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        document.getElementById('importFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    
+                    if (confirm('⚠️ سيتم استبدال جميع البيانات الحالية. هل تريد المتابعة؟')) {
+                        transactions = data.transactions || [];
+                        adminOperations = data.adminOperations || [];
+                        customers = data.customers || {};
+                        deviceBalance = data.deviceBalance || 0;
+                        cashBalance = data.cashBalance || 0;
+                        if (data.settings) settings = data.settings;
+                        
+                        saveData(); 
+                        loadData(); 
+                        
+                        alert('✅ تم استيراد البيانات بنجاح!');
+                    }
+                } catch (error) {
+                    alert('❌ خطأ في قراءة الملف. تأكد من أن الملف تالف أو ليس بصيغة JSON صحيحة.');
+                    console.error("Import Error:", error);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function clearAllData() {
+            if (confirm('⚠️ تحذير: سيتم حذف جميع البيانات بشكل نهائي. هل أنت متأكد؟')) {
+                if (confirm('⚠️ هذا الإجراء لا يمكن التراجع عنه. هل تريد المتابعة؟')) {
+                    transactions = [];
+                    adminOperations = [];
+                    customers = {};
+                    deviceBalance = 0;
+                    cashBalance = 0;
+                    saveData();
+                    updateDisplay();
+                    renderTransactions();
+                    renderAdminOperations();
+                    renderCustomers();
+                    renderDebts();
+                    alert('✅ تم مسح جميع البيانات بنجاح!');
+                }
+            }
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        // إعدادات الحفظ التلقائي
+        function loadSettings() {
+            document.getElementById('autoSaveEnabled').value = settings.autoSaveEnabled.toString();
+            document.getElementById('autoSaveInterval').value = settings.autoSaveInterval.toString();
+            document.getElementById('autoSaveFormat').value = settings.autoSaveFormat;
+        }
+
+        function saveSettings() {
+            settings.autoSaveEnabled = document.getElementById('autoSaveEnabled').value === 'true';
+            settings.autoSaveInterval = parseInt(document.getElementById('autoSaveInterval').value);
+            settings.autoSaveFormat = document.getElementById('autoSaveFormat').value;
+            
+            saveData();
+            startAutoSave();
+            alert('✅ تم حفظ الإعدادات بنجاح!');
+        }
+
+        function startAutoSave() {
+            if (autoSaveTimer) {
+                clearInterval(autoSaveTimer);
+            }
+
+            if (settings.autoSaveEnabled) {
+                autoSaveTimer = setInterval(() => {
+                    performAutoSave();
+                }, settings.autoSaveInterval * 1000);
+                
+                logAutoSave(`تم تفعيل الحفظ التلقائي كل ${settings.autoSaveInterval} ثانية`);
+            }
+        }
+
+        function performAutoSave() {
+            showAutoSaveStatus('جاري الحفظ التلقائي...');
+            
+            saveData();
+            
+            switch(settings.autoSaveFormat) {
+                case 'json':
+                    exportToJSON();
+                    break;
+                case 'excel':
+                    exportToExcel();
+                    break;
+                case 'txt':
+                    exportToTxt();
+                    break;
+                case 'all':
+                    exportToJSON();
+                    setTimeout(() => exportToExcel(), 500);
+                    setTimeout(() => exportToTxt(), 1000);
+                    break;
+            }
+            
+            logAutoSave(`تم الحفظ التلقائي بصيغة ${settings.autoSaveFormat}`);
+            showAutoSaveStatus('✅ تم الحفظ بنجاح', 2000);
+        }
+
+        function testAutoSave() {
+            performAutoSave();
+            alert('✅ تم اختبار الحفظ التلقائي. تحقق من مجلد التنزيلات.');
+        }
+
+        function showAutoSaveStatus(message, duration = 3000) {
+            const status = document.getElementById('autoSaveStatus');
+            const statusText = document.getElementById('autoSaveStatusText');
+            statusText.textContent = message;
+            status.classList.add('active');
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    status.classList.remove('active');
+                }, duration);
+            }
+        }
+
+        function logAutoSave(message) {
+            const logContent = document.getElementById('autoSaveLogContent');
+            const timestamp = formatDateTime(new Date());
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logEntry.style.padding = '5px';
+            logEntry.style.borderBottom = '1px solid #ddd';
+            logContent.insertBefore(logEntry, logContent.firstChild);
+            
+            
+            while (logContent.children.length > 50) {
+                logContent.removeChild(logContent.lastChild);
+            }
+        }
+
+        
+        window.addEventListener('load', () => {
+            loadData();
+            logAutoSave('تم تشغيل النظام بنجاح');
+        });
+
+        
+        window.addEventListener('beforeunload', () => {
+            saveData();
+        });
+    </script>
+</body>
+</html>
