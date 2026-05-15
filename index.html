@@ -1009,33 +1009,6 @@
             </div>
         </div>
 
-        <div id="externalData" class="tab-content">
-            <div class="form-section">
-                <h2>🔗 ناردنی داتای دەرەکی بۆ گووگڵ شیتس</h2>
-                <div class="alert alert-info">
-                    <strong>تێبینی:</strong> ئەم بەشە بۆ ناردنی داتا بۆ گووگڵ شیتس بەکاردێت. دڵنیابە لەوەی لینکی ئەپس سکریپتەکەت بە دروستی داناوە.
-                </div>
-                <form id="externalDataForm">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="userName">ناوەکەت *</label>
-                            <input type="text" id="userName" placeholder="ناوەکەت" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="userData">داتاکە *</label>
-                            <textarea id="userData" placeholder="داتاکە" rows="3" required></textarea>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        🚀 ناردن بۆ داتابەیس
-                    </button>
-                </form>
-                <div class="alert alert-warning" style="margin-top: 20px;">
-                    <strong>تێبینی گرنگ:</strong> بەهۆی بەکارهێنانی `mode: 'no-cors'`، ئەم پەیامەی سەرکەوتن "داتاکە پاشەکەوت کرا!" تەنها ئاماژەیە بۆ ئەوەی داواکارییەکە نێردراوە، نەک بە دڵنیاییەوە گەیشتووەتە گووگڵ شیتس. بۆ دڵنیابوون، پێویستە گووگڵ شیتسەکە بپشکنیت.
-                </div>
-            </div>
-        </div>
-
         <div id="settings" class="tab-content">
             <div class="form-section">
                 <h2>⚙️ إعدادات النظام</h2>
@@ -2158,8 +2131,12 @@
         });
 
         function sendData() {
-            // لێرەدا ئەو لینکەی لە ئەپس سکریپت کۆپیت کرد لێرە دایبنێ
-            const url = "https://script.google.com/macros/s/AKfycbzHWH2qgMcwbC6f-o3rakFnAg4HWghA7qpkYePhcBM/dev"; // گۆڕینی ئەم لینکە بە لینکی ڕاستەقینەی ئەپس سکریپتەکەت
+            /* 
+               تێبینی زۆر گرنگ: 
+               دڵنیابە کە لینکەکە کۆتاییەکەی /exec بێت نەک /dev.
+               لینکی /dev تەنها کاتێک کار دەکات کە خۆت لاگین بیت لە گۆگڵ.
+            */
+            const url = "https://script.google.com/macros/s/AKfycbxTaevUzrBnz5fvU-gJiDAZ9o4I0-vKsUupcZsSOnq1wHKoDOEMQ3wyi64SaNS_Milt/exec"; 
             
             const data = {
                 name: document.getElementById('userName').value,
@@ -2168,7 +2145,6 @@
 
             fetch(url, {
                 method: 'POST',
-                // mode: 'no-cors', // ئەمە لابەرە بۆ ئەوەی Apps Script بتوانێت postData بە دروستی بخوێنێتەوە
                 cache: 'no-cache',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
